@@ -4,27 +4,36 @@ on:
   push:
     branches:
       - lesson-5
+
 jobs:
-#  function_test: (commented out to save learner time)
-#    runs-on: ubuntu-latest
-#    defaults:
-#      run:
-#        working-directory: frontend
-#    steps:
-#      - uses: actions/checkout@v4
-#      - run: npm install
-#      - name: Run functional tests
-#        run: npm test -- --coverage --watchAll=false
   deploy:
-#    needs: [function_test] (normally you'd not deploy until functional tests were complete)
+    # normally this would depend on frontend tests
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: frontend
     steps:
-      - uses: actions/checkout@v4
-#      - run: npm install && npm run build (commented out to save learner time)
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # (build step intentionally omitted to save time)
       - name: Generate deployment package
         run: zip -r deploy.zip build Dockerfile
+
       - name: '**PLACEHOLDER** Deploy to Elastic Beanstalk'
-        run: echo Placeholder for Deployment
+        run: echo "Placeholder for Deployment"
+
+  security_test:
+    name: ZAP Baseline DAST
+    needs: [deploy]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout (for rules file, if used)
+        uses: actions/checkout@v4
+
+      - name: ZAP Baseline Scan
+        uses: zaproxy/action-baseline@v0.15.0
+        with:
+          target: 'https://hangryhippo.quantic.host'
+          rules_file_name: 'baseline_rules.yml'   # ensure this file exists in repo root
+          # cmd_options: '-a'                      # optional: active checks thresholding
